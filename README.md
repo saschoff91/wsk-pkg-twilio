@@ -68,7 +68,7 @@ The serviceSID compares many twilio numbers to a messaging service with copilot.
 
 The Url of each webhook action is *http://twiliofeed.mybluemix.net/messageincoming*.
 
-#Further Work & Troubleshooting
+#Further Work
 * Replace the restful api communication of the two actions with the twilio node library
 * Fire a trigger, if an inboud call is coming, doesnt work. Any incoming events are displayed in the [Programmable Voice Logs](https://www.twilio.com/console/voice/logs/calls), EXCEPT calls ! (error? bug?)
 * implement test cases
