@@ -1,7 +1,7 @@
 #wsk-pkg-twilio service package
 This package actions use the restful api from twilio service. The feed is implemented with the twilio node library.
 
-![Alt text](https://github.ibm.com/saschoff/awesome_master_thesis/blob/master/wsk-pkg-twilio/twilio%20overview.jpg "Twilio Package Workflow")
+![Twilio overview](https://github.com/saschoff91/wsk-pkg-twilio/blob/master/twilio%20overview.jpg?raw=true "Twilio Package Workflow")
 
 #Prepare environment
 Perfom following steps to prepare the environment for using the wsk-pkg.twilio.
