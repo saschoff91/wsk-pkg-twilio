@@ -2,7 +2,7 @@ var request = require('request');
 
 
 function main(params) {
-	var serviceEndpoint = params.url; //'twiliofeed.mybluemix.net';
+	var serviceEndpoint = params.appURL; //'twiliofeed.mybluemix.net';
 
 	var triggerAction = params.triggerName.split("/");
 	
