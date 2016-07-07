@@ -20,6 +20,9 @@ Perfom following steps to prepare the environment for using the wsk-pkg.twilio.
  
 - token, auth token from your dashboard
 
+- url, url of the bluemix app which holds the triggers 
+
+
 #Action call
 To peform a telefon call, invoke whisk action with following command:
 
