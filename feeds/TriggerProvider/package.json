@@ -11,9 +11,11 @@
 		"cfenv": "1.0.x",
 	        "winston": "^2.1.1",
     		"moment": "^2.11.1",
+		"nano": "^6.2.0",
     		"lodash": "^3.10.1",
 		"twilio":"^2.9.1",
-		"request": "2.69.0"
+		"request": "2.69.0",
+		"retry": "^0.9.0"
 	},
 	"repository": {},
 	"engines": {

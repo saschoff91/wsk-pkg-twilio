@@ -17,45 +17,125 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //get the app environment from Cloud Foundry
 var appEnv = cfenv.getAppEnv();
-var twilioService = appEnv.getServiceCreds('Twilio-ed');
 
+
+/*****TWILIO******/
+var twilioService = appEnv.getServiceCreds('Twilio-ed');
 var accountSID = twilioService.accountSID;
 var authToken = twilioService.authToken;
-
 var client = require('twilio')(accountSID,authToken);
+/*****TWILIO******/
 
-console.log('TWILIO CREDENTIALS ',accountSID, ' AND ', authToken );
+
+/*****CLOUDANT******/
+var cloudant = appEnv.getServiceCreds('cloudant-for-openwhisk');
+var cloudantUsername = cloudant.username;
+var cloudantPassword = cloudant.password;
+var cloudantDatabase = 'twilio_triggers';
+var nano = require('nano')(cloudant.url);
+nano.db.create(cloudantDatabase);
+var db = nano.db.use(cloudantDatabase);
+/*****CLOUDANT******/
+
+var retry = require('retry');
+var operation = retry.operation({
+	retries: 5,
+	factor: 3,
+	minTimeout: 1 * 1000,
+	maxTimeout: 60 * 1000
+});
+
 
 var feeds={};
 
 app.post('/createFeed', isAuthenticated,function(req,res) {
 	var method = 'POST/ createFeed';
 	var args = typeof req.body === 'object' ? req.body : JSON.parse(req.body);
-	var messagingService = args.serviceSID;
-	var numberSID = args.numberSID;
-	var trigger = args.trigger;
-	var namespace = args.namespace;
+
+	if ((!args.serviceSID)&&(!args.numberSID)) {
+		return sendError(method, 400, "Missing parameters: required serviceSID/ numberSID parameter is missing", res);
+	}
+
+	if (!args.trigger) {
+		return sendError(method, 400, "Missing parameters: required trigger parameter is missing", res);
+	}
+
+	if (!args.namespace) {
+		return sendError(method, 400, "Missing parameters: required namespace parameter is missing", res);
+	}
+
+	if (!args.apikey) {
+		return sendError(method, 400, "Missing parameters: required api key parameter is missing", res);
+	}
+
+	handleTriggerCreation(args, function(response) {
+		if (response == "messagingService") {
+			sendResponse(method, 200, 'Trigger on MessagingServiceSid created correctly.',res);
+		}else { 
+			if (response == "numberSID") {
+				sendResponse(method, 200, 'Trigger on numberSID created correctly.',res);
+			} else {
+				if (response == "numberSIDnotValid") {
+					sendError(method, 404, 'Trigger cannot created! NumberSID not available in twilio account!',res);
+				} else {
+					sendResponse(method, 500, 'Trigger failed to create. Missing parameters, e.g. numberSID or messagingServiceSID.',res);
+				}
+			}	
+		}
+	});
+
+
+});
+
+function handleTriggerCreation(newTrigger, _callback) {
+	var messagingService = newTrigger.serviceSID;
+	var numberSID = newTrigger.numberSID;
+	var trigger = newTrigger.trigger;
+	var namespace = newTrigger.namespace;
+	var apikey = newTrigger.apikey;
 
 	if (messagingService) {
-		feeds[trigger] = {messagingService:messagingService, namespace:namespace, trigger:trigger, apikey:args.apikey};
-		sendResponse(method, 200, 'Trigger "'+trigger+'" on MessagingServiceSid '+ messagingService+' created correctly.',res);
+
+		//newTrigger.apikey[1] = crypto.encrypt(newTrigger.apikey[1]);
+		operation.attempt((currentAttempt) => {
+			db.insert(newTrigger, trigger, (err) => {
+				if (operation.retry(err)) {
+					console.log(err);
+					console.log("trigger can not be inserted into DB, currentAttempt: ", currentAttempt, "out of :");
+					return;
+				}
+				console.log("inserted successfully");
+				feeds[trigger] = {messagingService:messagingService, namespace:namespace, trigger:trigger, apikey:apikey};
+				_callback("messagingService");
+			});
+		});
 	} else {
 		if (numberSID) { // if parameter numberSID is given
 			numberSIDLookUp(numberSID, function(number) { //check in twilio if numberSID exists
 				if ((number)&&(numberSID == number.sid)) {
-					feeds[trigger] = {numberSID:numberSID, phoneNumber:number.phone_number, namespace:namespace, trigger:trigger,apikey:args.apikey};
-					sendResponse(method, 200, 'Trigger "'+trigger+'" on numberSID '+ numberSID+' listen on number '+number.phone_number+' created correctly.',res);
+
+					//newTrigger.apikey[1] = crypto.encrypt(newTrigger.apikey[1]);
+					operation.attempt((currentAttempt) => {
+						db.insert(newTrigger, trigger, (err) => {
+							if (operation.retry(err)) {
+								console.log("trigger can not be inserted into DB, currentAttempt: ", currentAttempt, "out of :");
+								return;
+							}
+							console.log("inserted successfully");
+							feeds[trigger] = {numberSID:numberSID, phoneNumber:number.phone_number, namespace:namespace, trigger:trigger, apikey:apikey};
+							_callback("numberSID");
+						});
+					});
 				} else {
-					sendError(method, 404, 'Trigger "'+trigger+'" cannot created! NumberSID not available in twilio account!',res);
+					_callback("numberSIDnotValid");
 				}
 			});
 		}
 		else {
-			sendResponse(method, 500, 'Trigger "'+trigger+'" failed to create. Missing parameters, e.g. numberSID or messagingServiceSID.',res);
+			_callback("Fail");
 		}
-
 	}
-});
+};
 
 function numberSIDLookUp(numberSID, _callback) {
 	console.log("LOOKUP WITH NUMBERID ", numberSID);
@@ -73,11 +153,45 @@ app.delete('/deleteFeed/:id', isAuthenticated,function(req,res) {
 	var id = req.params.id;
 	id = id.replace(/:/g, "/");
 
-	delete feeds[id];
+	var deleted = handleTriggerDeletion(id);
+	if (deleted)
+		res.status(200).json({
+			ok: 'trigger ' + id + ' successfully deleted'
+		});
+	else
+		res.status(404).json({
+			error: 'trigger ' + id + ' not found'
+		});
 
-	sendResponse(method, 200, 'Trigger "'+id+'" deleted correctly.',res);
+
 
 });
+
+function handleTriggerDeletion(id) {
+	var method = 'deleteTrigger';
+	if (feeds[id]) {
+
+		delete feeds[id];
+
+		console.log('trigger', id, 'successfully deleted');
+
+		db.get(id, (err, body) => {
+			if (!err) {
+				db.destroy(body._id, body._rev, (err) => {
+					if (err) {
+						console.error(err);
+					}
+				});
+			} else {
+				console.error(method, 'there was an error while deleting', id, 'from database');
+			}
+		});
+		return true;
+	} else {
+		console.log('trigger', id, 'could not be found');
+		return false;
+	}
+}
 
 app.post('/messageincoming',function(req,res) {
 	var method = "POST/ messageincoming";
@@ -129,7 +243,7 @@ app.post('/messagingservice',function(req,res) {
  */
 function invokeWhiskAction(id, message) {
 	var method = 'FUNCTION: invokeWhiskAction';
-	
+
 	logger.info(id, method, 'for trigger', id, 'invoking action', id, 'with incoming message', message);
 
 	var form = {payload:message};
@@ -193,9 +307,35 @@ function sendResponse(method, statusCode, message, res) {
 	});
 }
 
+function resetSystem() {
+	var method = 'resetSystem';
+	// logger.info(tid, method, 'resetting system from last state');
+	console.log(method, 'resetting system from last state');
+	db.list({
+		include_docs: true
+	}, (err, body) => {
+		if (!err) {
+			body.rows.forEach((trigger) => {
+				//trigger.doc.pass = crypto.decrypt(trigger.doc.pass);
+				handleTriggerCreation(trigger.doc, (error, result) => {
+					if (error) {
+						console.warn(error);
+						console.error(trigger.doc.triggerName, "can not be triggered");
+					}
+				});
+			});
+		} else {
+			console.log(method, 'could not get latest state from database');
+			// logger.error(tid, method, 'could not get latest state from database');
+		}
+	});
+}
+
+
 //------------------------------- MESSAGE HUB POLLING SERVER
 app.listen(appEnv.port, '0.0.0.0', function() {
-	var method = 'StartUp'
-		// print a message when the server starts listening
-		logger.info("OK",method, 'Server listen on port '+appEnv.port);
+	var method = 'StartUp';
+	logger.info("OK",method, 'Server listen on port '+appEnv.port);
+
+	resetSystem();
 });
