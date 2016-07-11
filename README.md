@@ -12,7 +12,9 @@ Perfom following steps to prepare the environment for using the wsk-pkg.twilio.
 
 3. If you have a trial account, verify your own number [here](https://www.twilio.com/console/phone-numbers/verified) for message and call receiver.
 
-4. Bind following parameters to the wsk package twilio:
+4. Enable your twilio number for sending SMS/calls in special regions, e.g. germany with prefix +49, [here](https://www.twilio.com/user/account/settings/international/sms).
+
+5. Bind following parameters to the wsk package twilio:
 
 - base, this is the restful api base from twilio, default: api.twilio.com/2010-04-01
 
