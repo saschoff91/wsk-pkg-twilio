@@ -1,4 +1,6 @@
 #wsk-pkg-twilio service package
+[![Build Status](https://travis-ci.org/saschoff91/wsk-pkg-messagehub.svg?branch=master)](https://travis-ci.org/saschoff91/wsk-pkg-messagehub)
+
 This package actions use the restful api from twilio service. The feed is implemented with the twilio node library.
 
 ![Twilio overview](https://github.com/saschoff91/wsk-pkg-twilio/blob/master/twilio%20overview.jpg?raw=true "Twilio Package Workflow")
