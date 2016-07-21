@@ -3,19 +3,19 @@ Openwhisk Twilio Package
 ```
 wsk-pkg-twilio/
 ├── Getting started
-│   └── Create twilio account
+│   ├── Create twilio account
 │   └── Deploy Trigger Provider
 ├── Actions
-│   └── Send SMS
+│   ├── Send SMS
 │   └── Perform calls
 ├── Feed
 │   └── Create Trigger
-│       └── Numer Sid
+│       ├── Numer Sid
 │       └── Messaging Service Sid
 ├── Deploy Locally
 ├── Further Work
 ├── Contributing
-├── License
+└── License
 ```
 
 This repository includes actions and feeds for [IBM Bluemix](http://www.ibm.com/cloud-computing/bluemix/) service Twilio. 
