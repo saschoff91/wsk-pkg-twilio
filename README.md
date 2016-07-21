@@ -37,7 +37,7 @@ var cloudant = appEnv.getServiceCreds('Cloudant-instance');
 
 
 ## Actions:
-The parameters for the package /whisk.system/messagehub, like twilioBase, accountSID, authToken and appUrl, are required for all following actions and feeds. So they are not listed seperatly. Parameters for each action are listed in the source code of each action file.
+The parameters for the package /whisk.system/twilio, like twilioBase, accountSID, authToken and appUrl, are required for all following actions and feeds. So they are not listed seperatly. Parameters for each action are listed in the source code of each action file.
 
 To bind all required parameters to the package perform following command.
 ```bash
@@ -45,7 +45,7 @@ wsk package update twilio -p twilioBase '<twilioBase>' -p accountSID '<accountSI
 ```
 
 #### Send SMS 
-`/whisk.system/iot/sms` create a short message service and send it to a receiver
+`/whisk.system/twilio/sms` create a short message service and send it to a receiver
 
 | **Parameter** | **Type** | **Required** | **Description** | **Default** | **Example** |
 | ------------- | ---- | -------- | ------------ | ------- |------- |
@@ -173,7 +173,7 @@ Now the twilio account is able to perform a webhook request to your node applica
 | ------------- | ---- | -------- | ------------ | ------- |------- |
 | numberSID | *string* | yes |  Twilio number id | - | "XXXXX" |
 | serviceSID | *integer* | no |  Messaging Service id, alternative to numberSID | - | "YYYYY" |
-| feed | *string* | yes |  Feed action | - | "messagehub/twilioFeed" |
+| feed | *string* | yes |  Feed action | - | "twilio/twilioFeed" |
 
 ##### Usage
 ```bash
