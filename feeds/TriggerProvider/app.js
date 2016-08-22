@@ -235,21 +235,6 @@ app.post('/messageincoming',function(req,res) {
 	}
 });
 
-app.post('/messagingservice',function(req,res) {
-	var method = "POST/ messagingservice";
-	var args = typeof req.body === 'object' ? req.body : JSON.parse(req.body);
-	//console.log(req.body);
-	for (var id in feeds) {
-		var val = feeds[id];
-
-		if (val.messagingService == req.body.MessagingServiceSid) {
-			var response = invokeWhiskAction(id, req.body);
-		}
-	}
-	res.send(JSON.stringify({result:response}));
-});
-
-
 /**
  * Fire the whisk trigger
  */
