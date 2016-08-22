@@ -198,7 +198,7 @@ Now the twilio account is able to perform a webhook request to your node applica
 
 ##### Usage
 ```bash
-wsk trigger create <triggerName> -p topic 'numberSID'  --feed twilio/twilioFeed
+wsk trigger create <triggerName> -p numberSID 'numberSID'  --feed twilio/twilioFeed
 ```
 
 Example of success response:
