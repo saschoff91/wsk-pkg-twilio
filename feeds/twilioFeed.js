@@ -78,7 +78,7 @@ function main(params) {
 
 		var options = {
 			method: "DELETE",
-			url: serviceEndpoint + "/deleteFeed/"+triggerAction[2],
+			url: 'http://'+serviceEndpoint + "/deleteFeed/"+triggerAction[2],
 			auth: {
 				user: whiskKey[0],
 				pass: whiskKey[1]
@@ -89,7 +89,7 @@ function main(params) {
 		};
 
 		var req = request(options, function(error, response, body) {
-			if (response.statusCode == 200) {
+			if (!error && response.statusCode == 200) {
 				return whisk.done({"result":"deletion successful"});
 			} else {
 				console.log('http status code:', (response || {}).statusCode);
