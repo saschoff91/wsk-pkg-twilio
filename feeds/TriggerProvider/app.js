@@ -174,9 +174,6 @@ app.delete('/deleteFeed/:id', isAuthenticated,function(req,res) {
 		res.status(404).json({
 			error: 'trigger ' + id + ' not found'
 		});
-
-
-
 });
 
 function handleTriggerDeletion(id) {
@@ -234,6 +231,21 @@ app.post('/messageincoming',function(req,res) {
 		res.send(JSON.stringify({result:response}));
 	}
 });
+
+app.post('/messagingservice',function(req,res) {
+	var method = "POST/ messagingservice";
+	var args = typeof req.body === 'object' ? req.body : JSON.parse(req.body);
+	//console.log(req.body);
+	for (var id in feeds) {
+		var val = feeds[id];
+
+		if (val.messagingService == req.body.MessagingServiceSid) {
+			var response = invokeWhiskAction(id, req.body);
+		}
+	}
+	res.send(JSON.stringify({result:response}));
+});
+
 
 /**
  * Fire the whisk trigger
