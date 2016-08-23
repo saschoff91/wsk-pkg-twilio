@@ -18,4 +18,6 @@ $WSK_CLI --apihost $APIHOST action delete --auth $AUTH twilio/sms
 
 $WSK_CLI --apihost $APIHOST action delete --auth $AUTH twilio/call
 
+$WSK_CLI --apihost $APIHOST action delete --auth $AUTH twilio/twilioFeed
+
 $WSK_CLI --apihost $APIHOST package delete --auth $AUTH twilio
